@@ -2,6 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width">
 <title>CCDim</title>
 <meta name="viewport" content="width=device-width">
 <meta name="description" content="Formulaire de calcul pour le dimensionnement des câbles en très basse tension et en courant continu">
@@ -31,6 +32,12 @@ input, select {
 	box-sizing:content-box;
 	font:400 1.2rem sans-serif;
 }
+input:focus, select:focus {
+	background:#fff;
+}
+.highlight, :disabled.highlight {
+	background:yellow;
+}
 input:disabled {
 	color:#000;
 	background:#f5f5f5;
@@ -57,7 +64,6 @@ td span {
 tr {
 	height:2.5rem;
 }
-
 </style>
 </head>
 <body>
@@ -74,7 +80,7 @@ tr {
 		</tr>
 		<tr>
 				<th><label for="current">Intensité consommée</label></th>
-				<td><input onchange="compute(this)" id="current" type="number" min=".1" step=".1" value=""> Ampères</td>
+				<td><input onchange="compute(this)" id="current" type="number" min=".1" step=".1" value="15"> Ampères</td>
 		</tr>
 		<tr>
 				<th><label for="length">Longueur de fil&nbsp;aller&nbsp;retour</label></th>
@@ -102,19 +108,19 @@ tr {
 		</tr>
 		<tr>
 				<th><label for="voltage_drop_abs">Chute de tension</label></th>
-				<td><input onchange="compute(this)" id="voltage_drop_abs" type="number" min=".1" step=".1"> Volts</td>
+				<td><input onchange="compute(this)" id="voltage_drop_abs" type="number" min=".1" step=".1" value="0,4"> Volts</td>
 		</tr>
 		<tr>
 				<th><label for="voltage_drop_per">Chute de tension</label></th>
-				<td><input onchange="compute(this)" id="voltage_drop_per" type="number" min=".1" step=".1"> %</td>
+				<td><input onchange="compute(this)" id="voltage_drop_per" type="number" min=".1" step=".1" value="3,2"> %</td>
 		</tr>
 		<tr>
 				<th><label for="power_lost">Puissance perdue</label></th>
-				<td><input onchange="compute(this)" id="power_lost" type="number" min="1" step="1"> Watts</td>
+				<td><input onchange="compute(this)" id="power_lost" type="number" min="1" step="1" value="6"> Watts</td>
 		</tr>
 		<tr>
 				<th><label for="overheating">Echauffement des&nbsp;fils</label></th>
-				<td><input onchange="compute(this)" id="overheating" type="text" disabled> °C</td>
+				<td><input onchange="compute(this)" id="overheating" type="text" disabled value="10"> °C</td>
 		</tr>
 	</tbody>
 </table>
@@ -168,13 +174,15 @@ function setOverheating(input) {
 	setInput(overheating, overheating_input, 0);
 }
 
-
 function setInput(value, input, decimal) {
 	let factor = 10 ** decimal;
 	value = Math.round(value * factor) / factor;
 	if (input.value != value) {
 		input.value = value;
-		//highlight
+		input.classList.add('highlight');
+		 setTimeout(function(input) {
+			input.classList.remove('highlight');
+		}, 500, input);
 	}
 }
 
@@ -227,8 +235,6 @@ voltage_drop_per = voltage_drop_per_input.value,
 voltage_drop_abs = voltage_drop_abs_input.value,
 power_lost       = power_lost_input.value,
 overheating      = overheating_input.value;
-
-compute(voltage_input);
 </script>
 </body>
 </html>
