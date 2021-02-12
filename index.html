@@ -107,15 +107,15 @@ tr {
 		</tr>
 		<tr>
 				<th><label for="voltage_drop_abs">Chute de tension</label></th>
-				<td><input onchange="compute(this)" oninput="clearHighlights()" id="voltage_drop_abs" type="number" min=".1" step=".1" value="0.4"> Volts</td>
+				<td><input onchange="compute(this)" oninput="clearHighlights()" id="voltage_drop_abs" type="number" min=".1" step=".1" value="0.5"> Volts</td>
 		</tr>
 		<tr>
 				<th><label for="voltage_drop_per">Chute de tension</label></th>
-				<td><input onchange="compute(this)" oninput="clearHighlights()" id="voltage_drop_per" type="number" min=".1" step=".1" value="3.2"> %</td>
+				<td><input onchange="compute(this)" oninput="clearHighlights()" id="voltage_drop_per" type="number" min=".1" step=".1" value="4.3"> %</td>
 		</tr>
 		<tr>
 				<th><label for="power_lost">Puissance perdue</label></th>
-				<td><input onchange="compute(this)" oninput="clearHighlights()" id="power_lost" type="number" min="1" step="1" value="6"> Watts</td>
+				<td><input onchange="compute(this)" oninput="clearHighlights()" id="power_lost" type="number" min="1" step="1" value="8"> Watts</td>
 		</tr>
 		<tr>
 				<th><label for="overheating">Echauffement des&nbsp;fils</label></th>
@@ -135,7 +135,7 @@ function setPower(input){
 }
 
 function setSection(input) {
-	section = (length * current * 0.01724) / voltage_drop_abs;
+	section = (length * current * rho_copper) / voltage_drop_abs;
 	for (var standard_section of sections) {
 		if (section <= standard_section) break;
 	}
@@ -152,7 +152,7 @@ function setVoltageDropAbs(input) {
 		voltage_drop_abs = power_lost / current;
 	}
 	else {
-		voltage_drop_abs = (length * current * 0.01724) / section;
+		voltage_drop_abs = (length * current * rho_copper) / section;
 	}
 	setInput(voltage_drop_abs, voltage_drop_abs_input, 1);
 }
@@ -169,7 +169,7 @@ function setLostPower(input) {
 
 function setOverheating(input) {
 	overheating = power / voltage / (section ** 0.655) / 2.4281;
-	overheating = (overheating ** 2) * 1.691144575; <!-- 2 ^ 0,379 ^ 2 = 1.691144575  -->
+	overheating = (overheating ** 2) * ((nb_cables ** 0.379) ** 2);
 	setInput(overheating, overheating_input, 0);
 }
 
@@ -243,6 +243,8 @@ set_values = {
 	voltage_drop_per: [setVoltageDropAbs, setLostPower, setSection, setOverheating],
 	power_lost:       [setVoltageDropAbs, setVoltageDropPer, setSection, setOverheating]
 },
+nb_cables = 2,
+rho_copper = 0.023,
 sections = [0.25, 0.5, 0.75, 1, 1.5, 2, 2.5, 4, 6, 10, 16, 25, 35];
 
 var
