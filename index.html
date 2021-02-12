@@ -71,24 +71,24 @@ tr {
 	<tbody>
 		<tr>
 				<th><label for="voltage">Tension d'alimentation</label></th>
-				<td><input onchange="compute(this)" id="voltage" type="number" min="5" step=".1" value="12"> Volts</td>
+				<td><input onchange="compute(this)" oninput="clearHighlights()" id="voltage" type="number" min="5" step=".1" value="12"> Volts</td>
 		</tr>
 		<tr>
 				<th><label for="power">Puissance absorbée</label></th>
-				<td><input onchange="compute(this)" id="power"type="number" min="10" step="10" value="180"> Watts</td>
+				<td><input onchange="compute(this)" oninput="clearHighlights()" id="power"type="number" min="10" step="10" value="180"> Watts</td>
 		</tr>
 		<tr>
 				<th><label for="current">Intensité consommée</label></th>
-				<td><input onchange="compute(this)" id="current" type="number" min=".1" step=".1" value="15"> Ampères</td>
+				<td><input onchange="compute(this)" oninput="clearHighlights()" id="current" type="number" min=".1" step=".1" value="15"> Ampères</td>
 		</tr>
 		<tr>
 				<th><label for="length">Longueur de fil&nbsp;aller&nbsp;retour</label></th>
-				<td><input onchange="compute(this)" id="length" type="number" min=".1" step=".1" value="6"> Mètres</td>
+				<td><input onchange="compute(this)" oninput="clearHighlights()" id="length" type="number" min=".1" step=".1" value="6"> Mètres</td>
 		</tr>
 		<tr>
 				<th><label for="length">Section du fil</label></th>
 				<td>
-					<select onchange="compute(this)" id="section">
+					<select onchange="compute(this)" oninput="clearHighlights()" id="section">
 						<option value="0.25">0,25</option>
 						<option value="0.5">0,5</option>
 						<option value="0.75">0,75</option>
@@ -107,19 +107,19 @@ tr {
 		</tr>
 		<tr>
 				<th><label for="voltage_drop_abs">Chute de tension</label></th>
-				<td><input onchange="compute(this)" id="voltage_drop_abs" type="number" min=".1" step=".1" value="0,4"> Volts</td>
+				<td><input onchange="compute(this)" oninput="clearHighlights()" id="voltage_drop_abs" type="number" min=".1" step=".1" value="0,4"> Volts</td>
 		</tr>
 		<tr>
 				<th><label for="voltage_drop_per">Chute de tension</label></th>
-				<td><input onchange="compute(this)" id="voltage_drop_per" type="number" min=".1" step=".1" value="3,2"> %</td>
+				<td><input onchange="compute(this)" oninput="clearHighlights()" id="voltage_drop_per" type="number" min=".1" step=".1" value="3,2"> %</td>
 		</tr>
 		<tr>
 				<th><label for="power_lost">Puissance perdue</label></th>
-				<td><input onchange="compute(this)" id="power_lost" type="number" min="1" step="1" value="6"> Watts</td>
+				<td><input onchange="compute(this)" oninput="clearHighlights()" id="power_lost" type="number" min="1" step="1" value="6"> Watts</td>
 		</tr>
 		<tr>
 				<th><label for="overheating">Echauffement des&nbsp;fils</label></th>
-				<td><input onchange="compute(this)" id="overheating" type="text" disabled value="10"> °C</td>
+				<td><input id="overheating" type="text" disabled value="10"> °C</td>
 		</tr>
 	</tbody>
 </table>
@@ -178,14 +178,21 @@ function setInput(value, input, decimal) {
 	value = Math.round(value * factor) / factor;
 	if (input.value != value) {
 		input.value = value;
-		input.classList.add('highlight');
-		 setTimeout(function(input) {
+		highlight_values.push(input);
+	}
+}
+
+function clearHighlights() {
+	if (highlight_values) {
+		highlight_values.forEach(function(input) {
 			input.classList.remove('highlight');
-		}, 500, input);
+		});
+		highlight_values = [];
 	}
 }
 
 function compute(input) {
+	clearHighlights();
 	let value = parseFloat(input.value);
 	if (isNaN(value)) {
 		input.value = window[input.id];
@@ -198,6 +205,9 @@ function compute(input) {
 		window[input.id] = input.value
 		set_values[input.id].forEach(function(setValue) {
 			setValue(input.id);
+		});
+		highlight_values.forEach(function(input) {
+			input.classList.add('highlight');
 		});
 	}
 }
@@ -212,6 +222,17 @@ voltage_drop_per_input = document.getElementById('voltage_drop_per'),
 voltage_drop_abs_input = document.getElementById('voltage_drop_abs'),
 power_lost_input       = document.getElementById('power_lost'),
 overheating_input      = document.getElementById('overheating'),
+inputs = [
+	voltage_input,
+	power_input,
+	current_input,
+	length_input,
+	section_input,
+	voltage_drop_per_input,
+	voltage_drop_abs_input,
+	power_lost_input,
+	overheating_input
+],
 set_values = {
 	voltage:          [setCurrent, setVoltageDropAbs, setVoltageDropPer, setLostPower, setOverheating],
 	power:            [setCurrent, setVoltageDropAbs, setVoltageDropPer, setLostPower, setOverheating],
@@ -225,6 +246,7 @@ set_values = {
 sections = [0.25, 0.5, 0.75, 1, 1.5, 2, 2.5, 4, 6, 10, 16, 25, 35];
 
 var
+highlight_values = [],
 voltage          = voltage_input.value,
 power            = power_input.value, 
 current          = current_input.value, 
