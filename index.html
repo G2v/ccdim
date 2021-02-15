@@ -95,19 +95,19 @@ td[colspan="2"] {
 		<caption>Dimensionnement des câbles en très basse tension et en courant continu</caption>
 		<tr>
 				<th><label for="voltage">Tension d'alimentation</label></th>
-				<td><input onchange="compute(this)" id="voltage" aria-live="polite" type="number" min="5" step=".1" max="50" value="12"> Volts</td>
+				<td><input onchange="compute(this)" oninput="this.reportValidity()" id="voltage" aria-live="polite" type="number" min="5" step=".1" max="50" value="12"> Volts</td>
 		</tr>
 		<tr>
 				<th><label for="power">Puissance absorbée</label></th>
-				<td><input onchange="compute(this)" id="power" aria-live="polite" type="number" min="1" step="1" max="1500" value="180"> Watts</td>
+				<td><input onchange="compute(this)" oninput="this.reportValidity()" id="power" aria-live="polite" type="number" min="1" step="1" max="1500" value="180"> Watts</td>
 		</tr>
 		<tr>
 				<th><label for="current">Intensité consommée</label></th>
-				<td><input onchange="compute(this)" id="current" aria-live="polite" type="number" min=".1" step=".1" max="125" value="15"> Ampères</td>
+				<td><input onchange="compute(this)" oninput="this.reportValidity()" id="current" aria-live="polite" type="number" min=".1" step=".1" max="125" value="15"> Ampères</td>
 		</tr>
 		<tr>
 				<th><label for="length">Longueur de fil&nbsp;aller&nbsp;retour</label></th>
-				<td><input onchange="compute(this)" id="length" aria-live="polite" type="number" min=".1" step=".1" value="6"> Mètres</td>
+				<td><input onchange="compute(this)" oninput="this.reportValidity()" id="length" aria-live="polite" type="number" min=".1" step=".1" value="6"> Mètres</td>
 		</tr>
 		<tr>
 				<th><label for="section">Section de fil théorique</label></th>
@@ -137,15 +137,15 @@ td[colspan="2"] {
 		</tr>
 		<tr>
 				<th><label for="voltage_drop_abs">Chute de tension</label></th>
-				<td><input onchange="compute(this)" id="voltage_drop_abs" aria-live="polite" type="number" min=".01" step=".01" max="0.6" value="0.52"> Volts</td>
+				<td><input onchange="compute(this)" oninput="this.reportValidity()" id="voltage_drop_abs" aria-live="polite" type="number" min=".01" step=".01" max="0.6" value="0.52"> Volts</td>
 		</tr>
 		<tr>
 				<th><label for="voltage_drop_per">Chute de tension</label></th>
-				<td><input onchange="compute(this)" id="voltage_drop_per" aria-live="polite" type="number" min=".1" step=".1" max="5" value="4.3"> %</td>
+				<td><input onchange="compute(this)" oninput="this.reportValidity()" id="voltage_drop_per" aria-live="polite" type="number" min=".1" step=".1" max="5" value="4.3"> %</td>
 		</tr>
 		<tr>
 				<th><label for="power_lost">Puissance perdue</label></th>
-				<td><input onchange="compute(this)" id="power_lost" aria-live="polite" type="number" min="1" step="1" max="9" value="8"> Watts</td>
+				<td><input onchange="compute(this)" oninput="this.reportValidity()" id="power_lost" aria-live="polite" type="number" min="0.1" step=".1" max="9" value="8"> Watts</td>
 		</tr>
 	</table>
 </form>
@@ -217,12 +217,15 @@ function setVoltageDropPer(input) {
 
 function setLostPower(input) {
 	power_lost = voltage_drop_abs * current;
-	setInput(power_lost, data.power_lost, 0, input);
+	setInput(power_lost, data.power_lost, 1, input);
 }
 
 function setInput(value, output, decimal, input) {
 	let factor = 10 ** decimal;
 	value = Math.round(value * factor) / factor;
+	if (value < output.min) {
+		value = output.min;
+	}
 	if (output.max && value > output.max) {
 		value = output.max;
 		window[output.id] = value;
@@ -262,7 +265,16 @@ function compute(input) {
 		});
 	}
 	else {
-		data.reportValidity();
+		let value = parseFloat(input.value);
+		if (isNaN(value)) {
+			input.value = window[input.id];
+		}
+		else if (value < input.min) {
+				input.value = input.min;
+		}
+		else if (input.max && value > input.max) {
+			input.value = input.max;
+		}
 	}
 }
 
