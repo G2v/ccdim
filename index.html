@@ -118,7 +118,7 @@ td[colspan="2"] {
 		</tr>
 		<tr>
 				<th><label for="section">Section de fil théorique</label></th>
-				<td><input id="section" type="number" aria-live="polite" readonly value="4"> mm²</td>
+				<td><input id="section" type="number" aria-live="polite" readonly value="4" step=".01"> mm²</td>
 		</tr>
 		<tr>
 				<th><label for="standard_section">Section de fil standard</label></th>
@@ -175,19 +175,24 @@ td[colspan="2"] {
 	</form>
 </details>
 <script>
+function setMaxDrop(input) {
+	data.voltage_drop_abs.max = roundInput(voltage * max_drop_per, data.voltage_drop_abs);
+	data.power_lost.max = roundInput(power * max_drop_per, data.power_lost);
+}
+
 function setCurrent(input) {
 	current = power / voltage;
-	setInput(current, data.current, 1, input);
+	setInput(current, data.current, input);
 }
 
 function setPower(input){ 
 	power = current * voltage;
-	setInput(power, data.power, 0, input);
+	setInput(power, data.power, input);
 }
 
 function setLength(input) { 
 	length = section * voltage_drop_abs / (current * resistivity);
-	setInput(length, data.length, 1, input);
+	setInput(length, data.length, input);
 }
 
 function setSection(input) {
@@ -199,9 +204,9 @@ function setSection(input) {
 		for (standard_section of sections) {
 			if (section <= standard_section) break;
 		}
-		setInput(standard_section, data.standard_section, 2, input);
+		setInput(standard_section, data.standard_section, input);
 	}
-	setInput(section, data.section, 1, input);
+	setInput(section, data.section, input);
 }
 
 function setVoltageDropAbs(input) {
@@ -214,22 +219,21 @@ function setVoltageDropAbs(input) {
 	else {
 		voltage_drop_abs = (length * current * resistivity) / section;
 	}
-	setInput(voltage_drop_abs, data.voltage_drop_abs, 2, input);
+	setInput(voltage_drop_abs, data.voltage_drop_abs, input);
 }
 
 function setVoltageDropPer(input) {
 	voltage_drop_per = voltage_drop_abs / voltage * 100;;
-	setInput(voltage_drop_per, data.voltage_drop_per, 1, input);
+	setInput(voltage_drop_per, data.voltage_drop_per, input);
 }
 
 function setLostPower(input) {
 	power_lost = voltage_drop_abs * current;
-	setInput(power_lost, data.power_lost, 1, input);
+	setInput(power_lost, data.power_lost, input);
 }
 
-function setInput(value, output, decimal, input) {
-	let factor = 10 ** decimal;
-	value = Math.round(value * factor) / factor;
+function setInput(value, output, input) {
+	value = roundInput(value, output);
 	if (value < output.min) {
 		value = output.min;
 	}
@@ -249,6 +253,13 @@ function setInput(value, output, decimal, input) {
 	}
 }
 
+function roundInput(value, input) {
+	if (input.step) {
+		value = Math.round(value / input.step) * input.step;
+	}
+	return value;
+}
+
 function clearHighlights() {
 	if (highlight_values) {
 		highlight_values.forEach(function(input) {
@@ -263,19 +274,17 @@ function compute(input) {
 	if (!input.checkValidity()) {
 		let value = parseFloat(input.value);
 		if (isNaN(value)) {
-			input.value = window[input.id];
+			input.value = roundInput(window[input.id], input);
 			return
 		}
 		else if (value < input.min) {
-				input.value = input.min;
+			input.value = input.min;
 		}
 		else if (input.max && value > input.max) {
 			input.value = input.max;
 		}
 	}
 	window[input.id] = input.value
-	data.voltage_drop_abs.max = voltage * max_drop_per;
-	data.power_lost.max = power * max_drop_per;
 	set_values[input.id].forEach(function(setValue) {
 		setValue(input.id);
 	});
@@ -297,9 +306,9 @@ function saveSettings(e) {
 const
 data = document.getElementById('data'),
 set_values = {
-	voltage:          [setCurrent, setVoltageDropAbs, setVoltageDropPer, setLostPower],
-	power:            [setCurrent, setVoltageDropAbs, setVoltageDropPer, setLostPower],
-	current:          [setPower, setVoltageDropAbs, setVoltageDropPer, setLostPower],
+	voltage:          [setCurrent, setMaxDrop, setVoltageDropAbs, setVoltageDropPer, setLostPower],
+	power:            [setCurrent, setMaxDrop, setVoltageDropAbs, setVoltageDropPer, setLostPower],
+	current:          [setPower, setMaxDrop, setVoltageDropAbs, setVoltageDropPer, setLostPower],
 	length:           [setVoltageDropAbs, setVoltageDropPer, setLostPower],
 	standard_section: [setSection, setVoltageDropAbs, setVoltageDropPer, setLostPower],
 	voltage_drop_abs: [setVoltageDropPer, setLostPower, setSection],
